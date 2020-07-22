@@ -38,7 +38,6 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for("home"))
     form = RegistrationForm()
-
     if form.validate_on_submit():
         hashed_pass = bcrypt.generate_password_hash(form.password.data).decode("utf-8")
         user = User(
@@ -51,14 +50,12 @@ def register():
     return render_template("register.html", title="Sign Up", form=form)
 
 
-@app.route("/login", methods=["POST", "GET"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("home"))
     form = LoginForm()
-
     if form.validate_on_submit():
-
         user = User.query.filter_by(email=form.email.data).first()
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
