@@ -2,7 +2,8 @@ from flask import Flask, render_template, url_for, redirect, flash
 from flaskblog import app
 from flaskblog.models import User, Post
 from flaskblog.forms import RegistrationForm, LoginForm
-
+from flaskblog import app, bcrypt, db
+from flask_login import login_user, current_user
 
 
 posts = [
@@ -21,7 +22,6 @@ posts = [
 ]
 
 
-
 @app.route("/")
 @app.route("/home")
 def home():
@@ -35,22 +35,37 @@ def about():
 
 @app.route("/register", methods=['GET', "POST"])
 def register():
-	form = RegistrationForm()
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+    form = RegistrationForm()
 
-	if form.validate_on_submit():
-		flash("Account created for {}!".format(form.username.data), 'success')
-		return redirect(url_for("home"))
-
-	return render_template("register.html", title="Sign Up", form=form)
+    if form.validate_on_submit():
+        hashed_pass = bcrypt.generate_password_hash(
+            form.password.data).decode('utf-8')
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            password=hashed_pass
+        )
+        db.session.add(user)
+        db.session.commit()
+        flash("Your account has been created for! You can Sign In Now", 'success')
+        return redirect(url_for("login"))
+    return render_template("register.html", title="Sign Up", form=form)
 
 
 @app.route("/login", methods=['POST', "GET"])
 def login():
-	form = LoginForm()
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+    form = LoginForm()
 
-	if form.validate_on_submit():
-		if form.email.data == 'soapmactevis1@gmail.com' and form.password.data == 'Vivek@1999':
-			return redirect(url_for("home"))
-		else:
-			flash("Invalid Username or Password!", 'danger')	
-	return render_template("login.html", title="Sign In", form=form)
+    if form.validate_on_submit():
+
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user, remember=form.remember.data)
+            return redirect(url_for("home"))
+        else:
+            flash("Invalid Username or Password!", 'danger')
+    return render_template("login.html", title="Sign In", form=form)
