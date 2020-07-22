@@ -8,17 +8,17 @@ from flask_login import login_user, current_user, logout_user, login_required
 
 posts = [
     {
-        'author': "Vivek Ghosh",
+        "author": "Vivek Ghosh",
         "title": "Blog Post 1",
-        'content': "Content 1",
-        "date_posted": "May 20th, 2020"
+        "content": "Content 1",
+        "date_posted": "May 20th, 2020",
     },
     {
-        'author': "Vivek Kumar Ghosh",
+        "author": "Vivek Kumar Ghosh",
         "title": "Blog Post 2",
-        'content': "Content 2",
-        "date_posted": "May 21th, 2020"
-    }
+        "content": "Content 2",
+        "date_posted": "May 22th, 2020",
+    },
 ]
 
 
@@ -33,28 +33,25 @@ def about():
     return render_template("about.html", title="About Us")
 
 
-@app.route("/register", methods=['GET', "POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("home"))
     form = RegistrationForm()
 
     if form.validate_on_submit():
-        hashed_pass = bcrypt.generate_password_hash(
-            form.password.data).decode('utf-8')
+        hashed_pass = bcrypt.generate_password_hash(form.password.data).decode("utf-8")
         user = User(
-            username=form.username.data,
-            email=form.email.data,
-            password=hashed_pass
+            username=form.username.data, email=form.email.data, password=hashed_pass
         )
         db.session.add(user)
         db.session.commit()
-        flash("Your account has been created for! You can Sign In Now", 'success')
+        flash("Your account has been created for! You can Sign In Now", "success")
         return redirect(url_for("login"))
     return render_template("register.html", title="Sign Up", form=form)
 
 
-@app.route("/login", methods=['POST', "GET"])
+@app.route("/login", methods=["POST", "GET"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("home"))
@@ -67,7 +64,7 @@ def login():
             login_user(user, remember=form.remember.data)
             return redirect(url_for("home"))
         else:
-            flash("Invalid Username or Password!", 'danger')
+            flash("Invalid Username or Password!", "danger")
     return render_template("login.html", title="Sign In", form=form)
 
 
